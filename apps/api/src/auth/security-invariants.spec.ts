@@ -32,7 +32,7 @@ describe('authentication security invariants', () => {
     expect(() => createAuthConfig({
       NODE_ENV: 'production',
       API_PORT: '3001',
-      WEB_PORT: '5173',
+      WEB_PORT: '5174',
       API_BASE_URL: 'http://api.example.test',
       WEB_BASE_URL: 'https://app.example.test',
       KEYCLOAK_BASE_URL: 'https://id.example.test',

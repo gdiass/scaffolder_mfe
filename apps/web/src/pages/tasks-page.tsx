@@ -238,7 +238,7 @@ export function TasksPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-heading flex items-center gap-2">
             <ListTodo className="h-6 w-6 text-brand-text" />
-            Módulo de Referência: Tarefas
+            MFE Módulo de Referência: Tarefas
           </h1>
           <p className="text-sm text-muted dark:text-muted">
             Exemplo didático com regras de negócio, ownership, busca, paginação e remoção lógica.

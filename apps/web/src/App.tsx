@@ -8,16 +8,19 @@ import { AuthProvider } from './context/auth-context';
 import { ThemeProvider } from './context/theme-context';
 import { AuthLayout } from './components/layout/auth-layout';
 import { ProtectedRoute } from './components/layout/protected-route';
-import { DashboardPage } from './pages/dashboard-page';
-import { LoginPage } from './pages/login-page';
-import { ProfilePage } from './pages/profile-page';
 import { TasksPage } from './pages/tasks-page';
-import { UsersPage } from './pages/users-page';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       const status = (error as { status?: number })?.status;
+      
+      // CORREÇÃO: Não redireciona se estiver na porta standalone do MFE
+      if (window.location.port === '5174') {
+        console.warn('Bloqueado redirecionamento automático de login em modo Standalone');
+        return;
+      }
+
       if (status === 401 && window.location.pathname !== '/login') {
         window.location.href = `/login?returnTo=${encodeURIComponent(
           window.location.pathname + window.location.search,
@@ -44,9 +47,6 @@ export function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              {/* Public Login Route */}
-              <Route path="/login" element={<LoginPage />} />
-
               {/* Protected App Routes */}
               <Route
                 element={
@@ -55,21 +55,25 @@ export function App() {
                   </ProtectedRoute>
                 }
               >
-                <Route path="/" element={<DashboardPage />} />
+                <Route path="/" element={<TasksPage />} />
                 <Route path="/tasks" element={<TasksPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route
-                  path="/users"
-                  element={
-                    <ProtectedRoute requiredRole="ADMIN">
-                      <UsersPage />
-                    </ProtectedRoute>
-                  }
-                />
               </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Se tudo falhar e estiver na 5174, renderiza um aviso visual em vez de dar Navigate */}
+              <Route 
+                path="*" 
+                element={
+                  window.location.port === '5174' ? (
+                    <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
+                      <h2>MFE Tasks (Porta 5174)</h2>
+                      <p>Para testar esta rota isolada, certifique-se de injetar um Token fake no LocalStorage ou use o Shell.</p>
+                      <button onClick={() => window.location.href = '/'}>Ir para Raiz</button>
+                    </div>
+                  ) : (
+                    <Navigate to="/" replace />
+                  )
+                } 
+              />
             </Routes>
           </BrowserRouter>
         </AuthProvider>

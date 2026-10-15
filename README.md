@@ -114,7 +114,7 @@ O repositório inclui skills pedagógicas prontas em `.agent/skills/`:
 ```bash
 # Desenvolvimento & Setup
 pnpm run setup          # Executa o provisionamento inicial completo
-pnpm dev            # Inicia API (3100) e Web (5174) em paralelo
+pnpm dev            # Inicia API (3101) e Web (5174) em paralelo
 pnpm scaffold       # Scaffolding interativo para criar novos projetos derivados
 
 # Banco de Dados & Migrations
