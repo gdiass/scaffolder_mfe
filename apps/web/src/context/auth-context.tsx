@@ -1,13 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { AuthMeResponseDto, LoginRequestDto, SafeUserProfileDto } from '../lib/api-client/models';
+import type { AuthMeResponseDto, SafeUserProfileDto } from '../lib/api-client/models';
 
 interface AuthContextType {
   user: SafeUserProfileDto | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (credentials: LoginRequestDto) => Promise<SafeUserProfileDto>;
-  loginFederated: (returnTo?: string) => void;
   logout: () => Promise<void>;
   manageAccount: () => void;
   refetchUser: () => Promise<void>;
@@ -41,35 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
-  const login = useCallback(async (credentials: LoginRequestDto): Promise<SafeUserProfileDto> => {
-    try {
-      const response = await fetch(`${shellBaseUrl}/api/v1/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
-      if (response.ok) {
-        const loggedUser = ((await response.json()) as AuthMeResponseDto).user;
-        setUser(loggedUser);
-        return loggedUser;
-      }
-      throw new Error('Formato de resposta inesperado.');
-    } catch (err: any) {
-      const detail = err?.detail || err?.message;
-      throw new Error(detail || 'Não foi possível autenticar com as credenciais informadas.');
-    }
-  }, []);
-
-  const loginFederated = useCallback((returnTo?: string) => {
-    const searchParams = new URLSearchParams();
-    if (returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')) {
-      searchParams.set('returnTo', returnTo);
-    }
-    const query = searchParams.toString();
-    window.location.href = `${shellBaseUrl}/api/v1/auth/login${query ? `?${query}` : ''}`;
-  }, []);
-
   const logout = useCallback(async () => {
     try {
       await fetch(`${shellBaseUrl}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
@@ -95,8 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isAuthenticated,
         isAdmin,
-        login,
-        loginFederated,
         logout,
         manageAccount,
         refetchUser: fetchCurrentUser,

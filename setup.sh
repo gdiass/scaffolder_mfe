@@ -18,9 +18,6 @@ DB_NAME=""
 API_PORT="3001"
 WEB_PORT="5174"
 DB_PORT="5432"
-KEYCLOAK_PORT="8080"
-ADMIN_EMAIL=""
-ADMIN_NAME="Administrador"
 GIT_REMOTE_URL=""
 SKIP_INSTALL=0
 SKIP_GIT=0
@@ -33,9 +30,10 @@ warn()  { echo -e "${YELLOW}⚠${NC} $1"; }
 fail()  { echo -e "${RED}✖${NC} $1"; }
 bold()  { echo -e "${BOLD}$1${NC}"; }
 
-usage() {
-  cat <<'EOF'
-Uso: ./setup.sh [opções]
+
+## Configuração inicial
+
+Revise o arquivo \`.env\` gerado automaticamente antes de compartilhar o projeto.
 
 Cria um novo projeto derivado a partir do template AppStart.
 
@@ -47,9 +45,6 @@ Opções:
   --api-port <porta>          Porta da API (padrão: 3001)
   --web-port <porta>          Porta do frontend (padrão: 5174)
   --db-port <porta>           Porta publicada do PostgreSQL (padrão: 5432)
-  --keycloak-port <porta>     Porta publicada do Keycloak (padrão: 8080)
-  --admin-email <email>       E-mail do administrador inicial
-  --admin-name <texto>        Nome do administrador inicial
   --git-remote <url>          Remote Git opcional para o projeto derivado
   --skip-install              Não executa pnpm install
   --skip-git                  Não executa git init
@@ -66,7 +61,6 @@ Exemplo não interativo:
     --dir ../meu-projeto \
     --description "Projeto da disciplina" \
     --db-name meu_projeto \
-    --admin-email admin@meu-projeto.local
 EOF
 }
 
@@ -100,18 +94,6 @@ while [[ $# -gt 0 ]]; do
       DB_PORT="${2:-}"
       shift 2
       ;;
-    --keycloak-port)
-      KEYCLOAK_PORT="${2:-}"
-      shift 2
-      ;;
-    --admin-email)
-      ADMIN_EMAIL="${2:-}"
-      shift 2
-      ;;
-    --admin-name)
-      ADMIN_NAME="${2:-}"
-      shift 2
-      ;;
     --git-remote)
       GIT_REMOTE_URL="${2:-}"
       shift 2
@@ -141,12 +123,10 @@ while [[ $# -gt 0 ]]; do
       echo
       usage
       exit 1
-      ;;
+      - \`pnpm run setup\`: sobe PostgreSQL, aplica migrations e executa o seed
   esac
 done
 
-if [[ ! -f "$ROOT_DIR/package.json" || ! -f "$ROOT_DIR/.env.example" || ! -f "$ROOT_DIR/check_dependencies.sh" ]]; then
-  fail "Parece que você não está na raiz do template AppStart."
   exit 1
 fi
 
@@ -248,8 +228,7 @@ done
 API_PORT="$(require_value "$API_PORT" "Porta da API [3001]: " "3001")"
 WEB_PORT="$(require_value "$WEB_PORT" "Porta do frontend [5174]: " "5174")"
 DB_PORT="$(require_value "$DB_PORT" "Porta publicada do PostgreSQL [5432]: " "5432")"
-KEYCLOAK_PORT="$(require_value "$KEYCLOAK_PORT" "Porta publicada do Keycloak [8080]: " "8080")"
-for entry in "$API_PORT:API_PORT" "$WEB_PORT:WEB_PORT" "$DB_PORT:POSTGRES_PORT" "$KEYCLOAK_PORT:KEYCLOAK_PORT"; do
+for entry in "$API_PORT:API_PORT" "$WEB_PORT:WEB_PORT" "$DB_PORT:POSTGRES_PORT"; do
   value="${entry%%:*}"
   label="${entry##*:}"
   if ! validate_port "$value"; then
@@ -257,11 +236,6 @@ for entry in "$API_PORT:API_PORT" "$WEB_PORT:WEB_PORT" "$DB_PORT:POSTGRES_PORT" 
     exit 1
   fi
 done
-
-DEFAULT_ADMIN_EMAIL="admin@${PROJECT_NAME}.local"
-ADMIN_EMAIL="$(require_value "$ADMIN_EMAIL" "E-mail do administrador inicial [${DEFAULT_ADMIN_EMAIL}]: " "$DEFAULT_ADMIN_EMAIL")"
-DEFAULT_ADMIN_NAME="Administrador"
-ADMIN_NAME="$(require_value "$ADMIN_NAME" "Nome do administrador inicial [${DEFAULT_ADMIN_NAME}]: " "$DEFAULT_ADMIN_NAME")"
 
 if [[ "$SKIP_INSTALL" -eq 1 && "$BOOTSTRAP" -eq 1 ]]; then
   fail "--bootstrap exige instalação de dependências. Remova --skip-install ou não use --bootstrap."
@@ -301,20 +275,18 @@ else
 fi
 
 info "Aplicando configuração inicial do projeto..."
-node - "$TARGET_DIR" "$PROJECT_NAME" "$PROJECT_DESCRIPTION" "$DB_NAME" "$API_PORT" "$WEB_PORT" "$DB_PORT" "$KEYCLOAK_PORT" "$ADMIN_EMAIL" "$ADMIN_NAME" <<'NODE'
+node - "$TARGET_DIR" "$PROJECT_NAME" "$PROJECT_DESCRIPTION" "$DB_NAME" "$API_PORT" "$WEB_PORT" "$DB_PORT" <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
 
-const [targetDir, projectName, projectDescription, dbName, apiPort, webPort, dbPort, keycloakPort, adminEmail, adminName] = process.argv.slice(2);
+const [targetDir, projectName, projectDescription, dbName, apiPort, webPort, dbPort] = process.argv.slice(2);
 const title = projectName
   .split('-')
   .filter(Boolean)
   .map((part) => part[0].toUpperCase() + part.slice(1))
   .join(' ');
-const slug = projectName.replace(/-/g, '_');
 const dbUser = dbName;
 const dbPassword = `${dbName}_dev_password`;
-const cookieName = `${slug}_session`;
 const databaseUrl = `postgresql://${dbUser}:${dbPassword}@localhost:${dbPort}/${dbName}?schema=public`;
 
 function readJson(relativePath) {
@@ -347,21 +319,8 @@ function updateEnvFile(relativePath) {
     POSTGRES_USER: dbUser,
     POSTGRES_PASSWORD: dbPassword,
     POSTGRES_PORT: dbPort,
-    KEYCLOAK_DB_NAME: `${dbName}_keycloak`,
     DATABASE_URL: databaseUrl,
-    KEYCLOAK_PORT: keycloakPort,
-    KEYCLOAK_REALM: projectName,
-    KEYCLOAK_CLIENT_ID: `${projectName}-server`,
-    KEYCLOAK_CLIENT_SECRET: `${slug}_dev_client_secret`,
-    KEYCLOAK_ADMIN_CLIENT_ID: `${projectName}-admin`,
-    KEYCLOAK_ADMIN_CLIENT_SECRET: `${slug}_dev_admin_client_secret`,
-    SESSION_COOKIE_NAME: cookieName,
-    DEV_ADMIN_EMAIL: adminEmail,
-    DEV_ADMIN_PASSWORD: 'ChangeMe123456!',
-    DEV_ADMIN_NAME: adminName,
-    DEV_USER_EMAIL: `user@${projectName}.local`,
-    DEV_USER_PASSWORD: 'ChangeMe123456!',
-    DEV_USER_NAME: 'Usuário',
+    SHELL_BASE_URL: 'http://localhost:3000',
   };
 
   for (const [key, value] of Object.entries(replacements)) {
@@ -401,13 +360,11 @@ if (fs.existsSync(webPackagePath)) {
 updateEnvFile('.env.example');
 updateEnvFile('.env');
 
-updateText('README.md', () => `# ${title}\n\n${projectDescription}\n\nProjeto gerado a partir do template AppStart.\n\n## Primeiro uso\n\n\`\`\`bash\ncorepack enable\npnpm install\npnpm run setup\npnpm dev\n\`\`\`\n\n## Rodando no GitHub Codespaces\n\nO Codespaces expõe cada serviço em uma URL pública diferente de \`localhost\`.\nApós abrir o projeto no Codespaces, execute:\n\n\`\`\`bash\nbash scripts/codespaces-setup.sh\n\`\`\`\n\nO script detecta automaticamente o \`CODESPACE_NAME\` e atualiza as variáveis\n\`API_BASE_URL\`, \`WEB_BASE_URL\` e \`KEYCLOAK_BASE_URL\` no \`.env\` com as URLs\npúblicas corretas. Em seguida, torne as portas públicas no painel de **Portas**\ndo Codespaces e reinicie com \`pnpm dev\`.\n\n## Scripts principais\n\n- \`pnpm run setup\`: sobe PostgreSQL e Keycloak, aplica migrations e executa o seed\n- \`pnpm dev\`: inicia API e frontend em paralelo\n- \`pnpm db:up\`: sobe o PostgreSQL local\n- \`pnpm db:down\`: para o PostgreSQL sem remover o volume\n- \`pnpm auth:up\`: provisiona e sobe o Keycloak local\n- \`pnpm auth:down\`: para o Keycloak sem remover dados\n- \`pnpm db:migrate\`: aplica migrations Prisma no ambiente local\n- \`pnpm db:check\`: valida schema e migrations com um banco de shadow\n- \`pnpm db:deploy\`: aplica migrations em produção com prisma migrate deploy\n- \`pnpm db:seed\`: executa o seed de desenvolvimento\n- \`pnpm db:studio\`: abre o Prisma Studio\n\n## Configuração inicial\n\nRevise o arquivo \`.env\` gerado automaticamente antes de compartilhar o projeto.\n\n## Usuários de desenvolvimento\n\nAs credenciais são definidas pelas variáveis \`DEV_ADMIN_*\` e \`DEV_USER_*\` no \`.env\`.\n`);
+updateText('README.md', () => `# ${title}\n\n${projectDescription}\n\nProjeto gerado a partir do template AppStart.\n\n## Primeiro uso\n\n\`\`\`bash\ncorepack enable\npnpm install\npnpm run setup\npnpm dev\n\`\`\`\n\n## Scripts principais\n\n- \`pnpm run setup\`: sobe PostgreSQL, aplica migrations e executa o seed\n- \`pnpm dev\`: inicia API e frontend em paralelo\n- \`pnpm db:up\`: sobe o PostgreSQL local\n- \`pnpm db:down\`: para o PostgreSQL sem remover o volume\n- \`pnpm db:migrate\`: aplica migrations Prisma no ambiente local\n- \`pnpm db:check\`: valida schema e migrations com um banco de shadow\n- \`pnpm db:deploy\`: aplica migrations em produção com prisma migrate deploy\n- \`pnpm db:seed\`: executa o seed de desenvolvimento\n- \`pnpm db:studio\`: abre o Prisma Studio\n\n## Configuração inicial\n\nRevise o arquivo \`.env\` gerado automaticamente antes de compartilhar o projeto.\n`);
 
 updateText('compose.yaml', (text) => text
-  .replace(/appstart-postgres/g, `${projectName}-postgres`)
-  .replace(/appstart-keycloak/g, `${projectName}-keycloak`));
+  .replace(/appstart-postgres/g, `${projectName}-postgres`));
 updateText('apps/web/dev-server.mjs', (text) => text.replace(/AppStart/g, title));
-updateText('apps/web/src/pages/login-page.tsx', (text) => text.replace(/AppStart/g, title));
 NODE
 ok "Configuração inicial aplicada"
 

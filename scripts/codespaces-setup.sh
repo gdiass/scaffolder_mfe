@@ -49,10 +49,9 @@ get_env_value() {
 
 API_PORT="$(get_env_value API_PORT)"
 WEB_PORT="$(get_env_value WEB_PORT)"
-KEYCLOAK_PORT="$(get_env_value KEYCLOAK_PORT)"
 
-if [[ -z "$API_PORT" || -z "$WEB_PORT" || -z "$KEYCLOAK_PORT" ]]; then
-  echo -e "\033[0;31m✖${NC} Não foi possível ler API_PORT, WEB_PORT ou KEYCLOAK_PORT do .env."
+if [[ -z "$API_PORT" || -z "$WEB_PORT" ]]; then
+  echo -e "\033[0;31m✖${NC} Não foi possível ler API_PORT ou WEB_PORT do .env."
   echo    "  Verifique se o arquivo .env está preenchido corretamente."
   exit 1
 fi
@@ -62,19 +61,16 @@ fi
 CS_BASE="${CODESPACE_NAME}.app.github.dev"
 API_URL="https://${CODESPACE_NAME}-${API_PORT}.${CS_BASE#*.}"
 WEB_URL="https://${CODESPACE_NAME}-${WEB_PORT}.${CS_BASE#*.}"
-KEYCLOAK_URL="https://${CODESPACE_NAME}-${KEYCLOAK_PORT}.${CS_BASE#*.}"
 
 # Corrigindo: o padrão real é <name>-<port>.app.github.dev
 API_URL="https://${CODESPACE_NAME}-${API_PORT}.app.github.dev"
 WEB_URL="https://${CODESPACE_NAME}-${WEB_PORT}.app.github.dev"
-KEYCLOAK_URL="https://${CODESPACE_NAME}-${KEYCLOAK_PORT}.app.github.dev"
 
 info "Codespace detectado: ${BOLD}${CODESPACE_NAME}${NC}"
 info "Ajustando URLs no .env para o ambiente Codespaces..."
 echo ""
 echo "  API_BASE_URL      → $API_URL"
 echo "  WEB_BASE_URL      → $WEB_URL"
-echo "  KEYCLOAK_BASE_URL → $KEYCLOAK_URL"
 echo ""
 
 # ── Substituição idempotente no .env ──────────────────────────────────────
@@ -92,11 +88,9 @@ set_env_value() {
 
 set_env_value "API_BASE_URL"      "$API_URL"
 set_env_value "WEB_BASE_URL"      "$WEB_URL"
-set_env_value "KEYCLOAK_BASE_URL" "$KEYCLOAK_URL"
-
 ok ".env atualizado com as URLs públicas do Codespaces."
 echo ""
 warn "Lembre-se de:"
-echo "  1. Tornar as portas ${API_PORT}, ${WEB_PORT} e ${KEYCLOAK_PORT} públicas no painel de Portas do Codespaces."
+echo "  1. Tornar as portas ${API_PORT} e ${WEB_PORT} públicas no painel de Portas do Codespaces."
 echo "  2. Reiniciar o servidor após esta alteração: pnpm dev"
 echo ""

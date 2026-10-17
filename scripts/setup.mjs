@@ -7,11 +7,10 @@ try {
   validateEnv();
 
   await runCommand('node', ['scripts/db-up.mjs']);
-  await runCommand('node', ['scripts/auth-up.mjs']);
   await runCommand('node', ['scripts/db-migrate.mjs']);
   await runCommand('node', ['scripts/db-seed.mjs']);
 
-  console.log('Setup concluído. Banco, Keycloak e seed preparados.');
+  console.log('Setup concluído. Banco e seed preparados.');
 } catch (error) {
   console.error(error.message);
   process.exit(1);

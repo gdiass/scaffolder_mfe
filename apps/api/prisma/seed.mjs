@@ -11,9 +11,6 @@ async function main() {
   await client.end();
 
   console.log('Seed da aplicação concluído.');
-  console.log(`Usuário administrador provisionado no Keycloak: ${process.env.DEV_ADMIN_EMAIL}`);
-  console.log(`Usuário comum provisionado no Keycloak: ${process.env.DEV_USER_EMAIL}`);
-  console.log('Perfis locais são sincronizados no primeiro login pelo BFF.');
 }
 
 main().catch((error) => {

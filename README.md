@@ -1,12 +1,12 @@
 # AppStart
 
-Template pedagógico **high-opinionated** full stack para ensino e construção de aplicações web modernas com **NestJS**, **React**, **PostgreSQL (Prisma ORM)** e autenticação federada **Keycloak (OIDC)** via **Backend for Frontend (BFF)**.
+Template pedagógico **high-opinionated** para um microfrontend de Tasks com **NestJS**, **React** e **PostgreSQL (Prisma ORM)**. A autenticação e a identidade são responsabilidade do Shell em `http://localhost:3000`.
 
 ---
 
 ## Destaques do Template
 
-- **Arquitetura BFF Segura:** O frontend nunca manipula credenciais ou tokens JWT; a comunicação é protegida por cookies `HttpOnly` com sessões opacas salvas no banco e proteção contra CSRF.
+- **Identidade delegada ao Shell:** A API valida o autor de cada requisição consultando o Shell e não mantém login, Keycloak ou sessões locais.
 - **Tipagem Estrita Ponta a Ponta:** Contrato exportado em **OpenAPI 3.0** com geração automática de cliente TypeScript via **Orval** (`@/lib/api-client`).
 - **Interface React Moderna:** React 19, Vite 8, Tailwind CSS, tema claro/escuro com prevenção de *flicker*, gerenciamento de dados remotos com **TanStack Query** e formulários com **React Hook Form + Zod**.
 - **Governança de Dados:** Migrações versionadas, controle de propriedade (*ownership*) e remoção lógica (*soft delete*).
@@ -30,12 +30,12 @@ bash ./setup.sh --in-place --bootstrap
 ```
 O script fará algumas perguntas (nome do projeto, portas) e vai transformar esse template no seu projeto final de forma automática!
 
-> ⚠️ **Atenção no Codespaces (Erro de CORS/CSRF):**
+> ⚠️ **Atenção no Codespaces:**
 > Se ao tentar fazer login o painel mostrar "Origem não permitida" ou "CORS error", é porque o backend foi feito para proteger contra acessos de URLs desconhecidas. Abra o seu arquivo `.env` e troque os `http://localhost` para as URLs públicas que o Codespaces gerou para você (mantendo as portas):
 > ```env
 > API_BASE_URL=https://NOME-DO-SEU-CODESPACE-3001.app.github.dev
 > WEB_BASE_URL=https://NOME-DO-SEU-CODESPACE-5174.app.github.dev
-> KEYCLOAK_BASE_URL=https://NOME-DO-SEU-CODESPACE-8080.app.github.dev
+> SHELL_BASE_URL=https://seu-shell.example.com
 > ```
 > Após alterar o `.env`, reinicie o servidor (`pnpm dev`) para ele ler as novas URLs!
 
@@ -52,7 +52,7 @@ pnpm install
 # 2. Copiar variáveis de ambiente
 cp .env.example .env
 
-# 3. Executar setup completo (PostgreSQL + Keycloak + Migrations + Seed + Contratos)
+# 3. Executar setup completo (PostgreSQL + Migrations + Seed + Contratos)
 pnpm run setup
 
 # 4. Iniciar servidores de desenvolvimento (API + Web)
@@ -64,23 +64,18 @@ Documentação da API Swagger em: **[http://localhost:3100/api/v1/docs](http://l
 
 ---
 
-## Credenciais Padrão de Desenvolvimento
-
-| Usuário | E-mail | Senha | Papel | Descrição |
-| :--- | :--- | :--- | :--- | :--- |
-| **Administrador** | `admin@appstart.local` | `admin` (ou `ChangeMe123456!`) | `ADMIN` | Gestão de usuários e visão global |
-| **Aluno / Usuário** | `user@appstart.local` | `aluno` (ou `ChangeMe123456!`) | `USER` | Autoatendimento e módulo de tarefas |
-
 ---
 
 ## Arquitetura do Sistema
 
 ```text
-Browser (React SPA) <--- Cookies HttpOnly ---> NestJS API (BFF) <--- OIDC PKCE ---> Keycloak IdP
-                                                     |
-                                                     v
-                                             PostgreSQL (Prisma)
-                                        (Perfis, Sessões, Tasks)
+Browser (React SPA) <--- identidade ---> Shell (localhost:3000)
+                                      |
+                                      v
+                              NestJS Tasks API
+                                      |
+                                      v
+                              PostgreSQL (Prisma)
 ```
 
 ---
@@ -123,10 +118,6 @@ pnpm db:down        # Para o PostgreSQL mantendo os volumes
 pnpm db:migrate     # Aplica migrations do Prisma
 pnpm db:seed        # Executa o seed de dados
 pnpm db:studio      # Abre a interface visual do Prisma Studio
-
-# Autenticação (Keycloak)
-pnpm auth:up        # Sobe o Keycloak e PostgreSQL
-pnpm auth:down      # Para o Keycloak
 
 # Contrato & Type-Safety
 pnpm api:generate   # Gera openapi.json e o cliente TypeScript via Orval

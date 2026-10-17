@@ -79,20 +79,9 @@ export function validateEnv() {
     }
   }
 
-  const passwordMinLength = Number(env.KEYCLOAK_PASSWORD_MIN_LENGTH);
-  if (!Number.isInteger(passwordMinLength) || passwordMinLength < 8 || passwordMinLength > 128) {
-    throw new Error('KEYCLOAK_PASSWORD_MIN_LENGTH deve ser um inteiro entre 8 e 128.');
-  }
-
-  for (const key of ['POSTGRES_DB', 'POSTGRES_USER', 'KEYCLOAK_DB_NAME']) {
+  for (const key of ['POSTGRES_DB', 'POSTGRES_USER']) {
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(env[key])) {
       throw new Error(`Valor inválido para ${key}: ${env[key]}. Use apenas letras, números e underscore.`);
-    }
-  }
-
-  for (const key of ['KEYCLOAK_REALM', 'KEYCLOAK_CLIENT_ID', 'KEYCLOAK_ADMIN_CLIENT_ID']) {
-    if (!/^[a-zA-Z0-9._-]+$/.test(env[key])) {
-      throw new Error(`Valor inválido para ${key}: ${env[key]}. Use apenas letras, números, ponto, hífen e underscore.`);
     }
   }
 
@@ -100,7 +89,7 @@ export function validateEnv() {
   const urlDefaults = {
     API_BASE_URL: `http://localhost:${env.API_PORT}`,
     WEB_BASE_URL: `http://localhost:${env.WEB_PORT}`,
-    KEYCLOAK_BASE_URL: `http://localhost:${env.KEYCLOAK_PORT}`,
+    SHELL_BASE_URL: 'http://localhost:3000',
   };
   for (const [key, fallback] of Object.entries(urlDefaults)) {
     if (!env[key]) {
@@ -109,7 +98,7 @@ export function validateEnv() {
     }
   }
 
-  for (const key of ['API_BASE_URL', 'WEB_BASE_URL', 'KEYCLOAK_BASE_URL']) {
+  for (const key of ['API_BASE_URL', 'WEB_BASE_URL', 'SHELL_BASE_URL']) {
     try {
       const url = new URL(env[key]);
       if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) {
@@ -121,21 +110,6 @@ export function validateEnv() {
     } catch {
       throw new Error(`Valor inválido para ${key}: ${env[key]}. Informe uma URL HTTP(S)${env.NODE_ENV === 'production' ? ' com HTTPS' : ''}.`);
     }
-  }
-
-  const sessionTtlHours = Number(env.SESSION_TTL_HOURS);
-  if (!Number.isInteger(sessionTtlHours) || sessionTtlHours < 1 || sessionTtlHours > 8760) {
-    throw new Error('SESSION_TTL_HOURS deve ser um inteiro entre 1 e 8760.');
-  }
-
-  const correlationTtl = Number(env.OIDC_CORRELATION_TTL_SECONDS);
-  if (!Number.isInteger(correlationTtl) || correlationTtl < 60 || correlationTtl > 900) {
-    throw new Error('OIDC_CORRELATION_TTL_SECONDS deve ser um inteiro entre 60 e 900.');
-  }
-
-  const cleanupInterval = Number(env.SESSION_CLEANUP_INTERVAL_MINUTES);
-  if (!Number.isInteger(cleanupInterval) || cleanupInterval < 1 || cleanupInterval > 1440) {
-    throw new Error('SESSION_CLEANUP_INTERVAL_MINUTES deve ser um inteiro entre 1 e 1440.');
   }
 
   return env;
