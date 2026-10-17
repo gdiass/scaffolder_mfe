@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { authControllerDirectLogin, authControllerLogout, authControllerMe } from '../lib/api-client';
 import type { AuthMeResponseDto, LoginRequestDto, SafeUserProfileDto } from '../lib/api-client/models';
 
 interface AuthContextType {
@@ -15,6 +14,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const shellBaseUrl = import.meta.env.VITE_SHELL_BASE_URL ?? 'http://localhost:3000';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SafeUserProfileDto | null>(null);
@@ -23,9 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchCurrentUser = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await authControllerMe();
-      if (res && res.status === 200 && 'user' in (res.data as AuthMeResponseDto)) {
-        setUser((res.data as AuthMeResponseDto).user);
+      const response = await fetch(`${shellBaseUrl}/api/v1/auth/me`, { credentials: 'include' });
+      if (response.ok) {
+        const data = (await response.json()) as AuthMeResponseDto;
+        setUser(data.user);
       } else {
         setUser(null);
       }
@@ -42,9 +43,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (credentials: LoginRequestDto): Promise<SafeUserProfileDto> => {
     try {
-      const res = await authControllerDirectLogin(credentials);
-      if (res && res.status === 200 && 'user' in (res.data as AuthMeResponseDto)) {
-        const loggedUser = (res.data as AuthMeResponseDto).user;
+      const response = await fetch(`${shellBaseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      if (response.ok) {
+        const loggedUser = ((await response.json()) as AuthMeResponseDto).user;
         setUser(loggedUser);
         return loggedUser;
       }
@@ -61,13 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       searchParams.set('returnTo', returnTo);
     }
     const query = searchParams.toString();
-    const loginUrl = `/api/v1/auth/login${query ? `?${query}` : ''}`;
-    window.location.href = loginUrl;
+    window.location.href = `${shellBaseUrl}/api/v1/auth/login${query ? `?${query}` : ''}`;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await authControllerLogout();
+      await fetch(`${shellBaseUrl}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' });
     } catch {
       // ignore
     } finally {
@@ -77,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const manageAccount = useCallback(() => {
-    window.location.href = '/api/v1/auth/account';
+    window.location.href = `${shellBaseUrl}/api/v1/auth/account`;
   }, []);
 
   const isAuthenticated = Boolean(user);

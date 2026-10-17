@@ -1,6 +1,6 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Public } from '../access/access.decorators';
+import { Public } from '../shell-auth/shell-auth.decorators';
 import { ProblemDetailsDto } from '../common/dto/problem-details.dto';
 import { PrismaService } from '../prisma/prisma.service';
 

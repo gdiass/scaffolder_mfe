@@ -1,9 +1,9 @@
-import type { ResolvedSession } from '../auth/auth.types';
+import type { ShellUser } from '../shell-auth/shell-auth.types';
 
 declare global {
   namespace Express {
     interface Request {
-      auth?: ResolvedSession;
+      shellUser?: ShellUser;
     }
   }
 }

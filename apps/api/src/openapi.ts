@@ -6,12 +6,6 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setTitle('AppStart API')
     .setDescription('API REST do AppStart - Especificação OpenAPI 3.0')
     .setVersion('1.0.0')
-    .addCookieAuth('appstart_session', {
-      type: 'apiKey',
-      in: 'cookie',
-      name: 'appstart_session',
-      description: 'Cookie de sessão local opaca',
-    })
     .build();
 
   return SwaggerModule.createDocument(app, config);

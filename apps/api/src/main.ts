@@ -2,12 +2,12 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { AUTH_CONFIG, type AuthConfig } from './config/auth.config';
+import { APP_CONFIG, type AppConfig } from './config/app.config';
 import { setupSwagger } from './openapi';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  const config = app.get<AuthConfig>(AUTH_CONFIG);
+  const config = app.get<AppConfig>(APP_CONFIG);
 
   app.setGlobalPrefix('api/v1', {
     exclude: ['health', 'health/(.*)'],

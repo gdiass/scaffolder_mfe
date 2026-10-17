@@ -12,13 +12,12 @@ import {
   Query,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CurrentUser } from '../access/access.decorators';
-import type { SafeUserProfile } from '../auth/auth.types';
+ import { CurrentUser } from '../shell-auth/shell-auth.decorators';
+ import type { ShellUser } from '../shell-auth/shell-auth.types';
 import { ProblemDetailsDto } from '../common/dto/problem-details.dto';
 import {
   CreateTaskDto,
@@ -30,7 +29,6 @@ import {
 import { TasksService } from './tasks.service';
 
 @ApiTags('tasks')
-@ApiBearerAuth()
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
@@ -44,7 +42,7 @@ export class TasksController {
   @ApiResponse({ status: 400, description: 'Dados inválidos ou data limite no passado', type: ProblemDetailsDto })
   @ApiResponse({ status: 401, description: 'Não autenticado', type: ProblemDetailsDto })
   async create(
-    @CurrentUser() user: SafeUserProfile,
+    @CurrentUser() user: ShellUser,
     @Body() dto: CreateTaskDto,
   ): Promise<TaskDto> {
     return this.tasksService.create(user.id, dto);
@@ -58,7 +56,7 @@ export class TasksController {
   @ApiResponse({ status: 200, description: 'Lista paginada de tarefas', type: PaginatedTasksResponseDto })
   @ApiResponse({ status: 401, description: 'Não autenticado', type: ProblemDetailsDto })
   async findAll(
-    @CurrentUser() user: SafeUserProfile,
+    @CurrentUser() user: ShellUser,
     @Query() query: ListTasksQueryDto,
   ): Promise<PaginatedTasksResponseDto> {
     return this.tasksService.findAll(user, query);
@@ -74,7 +72,7 @@ export class TasksController {
   @ApiResponse({ status: 403, description: 'Acesso negado (tarefa de outro proprietário)', type: ProblemDetailsDto })
   @ApiResponse({ status: 404, description: 'Tarefa não encontrada', type: ProblemDetailsDto })
   async findById(
-    @CurrentUser() user: SafeUserProfile,
+    @CurrentUser() user: ShellUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<TaskDto> {
     return this.tasksService.findById(user, id);
@@ -91,7 +89,7 @@ export class TasksController {
   @ApiResponse({ status: 403, description: 'Acesso negado', type: ProblemDetailsDto })
   @ApiResponse({ status: 404, description: 'Tarefa não encontrada', type: ProblemDetailsDto })
   async update(
-    @CurrentUser() user: SafeUserProfile,
+    @CurrentUser() user: ShellUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateTaskDto,
   ): Promise<TaskDto> {
@@ -109,7 +107,7 @@ export class TasksController {
   @ApiResponse({ status: 403, description: 'Acesso negado', type: ProblemDetailsDto })
   @ApiResponse({ status: 404, description: 'Tarefa não encontrada', type: ProblemDetailsDto })
   async remove(
-    @CurrentUser() user: SafeUserProfile,
+    @CurrentUser() user: ShellUser,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     return this.tasksService.remove(user, id);

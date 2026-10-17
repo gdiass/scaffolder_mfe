@@ -9,27 +9,7 @@ const REQUIRED_KEYS = [
   'POSTGRES_USER',
   'POSTGRES_PASSWORD',
   'POSTGRES_PORT',
-  'KEYCLOAK_DB_NAME',
-  'KEYCLOAK_PORT',
-  'KEYCLOAK_REALM',
-  'KEYCLOAK_CLIENT_ID',
-  'KEYCLOAK_CLIENT_SECRET',
-  'KEYCLOAK_ADMIN_CLIENT_ID',
-  'KEYCLOAK_ADMIN_CLIENT_SECRET',
-  'KEYCLOAK_ADMIN_USER',
-  'KEYCLOAK_ADMIN_PASSWORD',
-  'KEYCLOAK_PASSWORD_MIN_LENGTH',
-  'DATABASE_URL',
-  'SESSION_TTL_HOURS',
-  'SESSION_COOKIE_NAME',
-  'OIDC_CORRELATION_TTL_SECONDS',
-  'SESSION_CLEANUP_INTERVAL_MINUTES',
-  'DEV_ADMIN_EMAIL',
-  'DEV_ADMIN_PASSWORD',
-  'DEV_ADMIN_NAME',
-  'DEV_USER_EMAIL',
-  'DEV_USER_PASSWORD',
-  'DEV_USER_NAME'
+  'DATABASE_URL'
 ];
 
 export const rootDir = process.cwd();
@@ -92,7 +72,7 @@ export function validateEnv() {
     ].join('\n'));
   }
 
-  for (const key of ['API_PORT', 'WEB_PORT', 'POSTGRES_PORT', 'KEYCLOAK_PORT']) {
+  for (const key of ['API_PORT', 'WEB_PORT', 'POSTGRES_PORT']) {
     const value = Number(env[key]);
     if (!Number.isInteger(value) || value <= 0 || value > 65535) {
       throw new Error(`Valor inválido para ${key}: ${env[key]}. Informe uma porta entre 1 e 65535.`);
