@@ -43,15 +43,6 @@ export class TasksService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         ownerId,
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
     });
 
     return this.serializeTask(created);
@@ -98,15 +89,6 @@ export class TasksService {
         skip,
         take: pageSize,
         orderBy: { [sortBy]: sortOrder },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
       }),
     ]);
 
@@ -128,15 +110,6 @@ export class TasksService {
       where: {
         id,
         deletedAt: null,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
       },
     });
 
@@ -200,15 +173,6 @@ export class TasksService {
         ...(dto.status !== undefined ? { status: dto.status as TaskStatusEnum } : {}),
         ...(dto.priority !== undefined ? { priority: dto.priority as TaskPriorityEnum } : {}),
         ...(dto.dueDate !== undefined ? { dueDate: dto.dueDate ? new Date(dto.dueDate) : null } : {}),
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
       },
     });
 

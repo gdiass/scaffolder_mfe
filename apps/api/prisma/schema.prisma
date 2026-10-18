@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  ADMIN
-}
-
 enum TaskStatus {
   PENDING
   IN_PROGRESS
@@ -26,20 +21,6 @@ enum TaskPriority {
   URGENT
 }
 
-model UserProfile {
-  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  keycloakUserId String    @unique
-  name           String
-  email          String    @unique
-  roleSnapshot   UserRole  @default(USER)
-  isActiveLocal  Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  tasks          Task[]
-
-  @@map("user_profiles")
-}
-
 model Task {
   id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title       String
@@ -51,7 +32,6 @@ model Task {
   deletedAt   DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  owner       UserProfile  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@index([deletedAt])
