@@ -25,6 +25,3 @@ CREATE TABLE "tasks" (
 CREATE INDEX "tasks_ownerId_idx" ON "tasks"("ownerId");
 CREATE INDEX "tasks_deletedAt_idx" ON "tasks"("deletedAt");
 CREATE INDEX "tasks_status_idx" ON "tasks"("status");
-
--- Consulta 004: Foreign key relacionando ao perfil do usuário
-ALTER TABLE "tasks" ADD CONSTRAINT "tasks_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "user_profiles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
