@@ -6,9 +6,14 @@ import { LoadingState } from '../ui/state-feedback';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'ADMIN' | 'USER';
+  skipAuth?: boolean;
 }
 
-export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRole, skipAuth }: ProtectedRouteProps) {
+  if (skipAuth) {
+    return <>{children}</>;
+  }
+
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 

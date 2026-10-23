@@ -12,3 +12,4 @@ playground/
 output/
 tmp/
 apps/web/@mf-types
+apps/web/.mf

@@ -18,6 +18,8 @@ export default defineConfig({
       shared: {
         react: { singleton: true, requiredVersion: false },
         'react-dom': { singleton: true, requiredVersion: false },
+        'react/jsx-runtime': { singleton: true, requiredVersion: false },
+        'react/jsx-dev-runtime': { singleton: true, requiredVersion: false },
       },
     }),
   ],
